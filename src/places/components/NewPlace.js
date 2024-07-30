@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 function NewPlace() {
-  return (
-    <div>NewPlace</div>
-  )
+  return <div>NewPlace</div>;
 }
 
-export default NewPlace
+export default NewPlace;

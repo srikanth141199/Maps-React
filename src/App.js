@@ -11,10 +11,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        
-        <Route path="/" element={<Users/>}></Route>
-        <Route  path="/places/new" element={<NewPlace/>}></Route>
-        <Route path="*" element = {<Navigate to="/" />}></Route>
+        <Route path="/" element={<Users />}></Route>
+        <Route path="/places/new" element={<NewPlace />}></Route>
+        <Route path="*" element={<Navigate to="/" />}></Route>
       </Routes>
     </Router>
   );
