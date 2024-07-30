@@ -7,8 +7,8 @@ function Users() {
       id: 1,
       name: "Srikanth",
       image:
-        "https://blog.thomascook.in/wp-content/uploads/2017/01/Santorini-Greece.jpg",
-      places: 3,
+        "https://4kwallpapers.com/images/wallpapers/luffy-laughing-one-5120x2880-12358.png",
+      placeCount: 3,
     },
   ];
 

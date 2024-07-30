@@ -1,18 +1,27 @@
 import React from "react";
-import "./UserItems.css";
+import "./UserItem.css";
+import Card from "../../../shared/components/UIElements/Card/Card";
+import { Link } from "react-router-dom";
+import Avatar from "../../../shared/components/UIElements/Avatar/Avatar";
 
 function UserItems({ user }) {
-  const { name, image, places } = user;
+  const { id, name, image, placeCount } = user;
   return (
-    <div className="UserItem">
-      <div className="userItem_image">
-        <img src={image} alt={name} />
-      </div>
-      <div className="userItem_info">
-        <h2>{name}</h2>
-        <h3>{places}</h3>
-      </div>
-    </div>
+    <li className="user-item">
+      <Card className="user-item__content">
+        <Link to={`/${id}/places`}>
+          <div className="user-item__image">
+            <Avatar image={image} alt={name} />
+          </div>
+          <div className="user-item__info">
+            <h2>{name}</h2>
+            <h3>
+              {placeCount} {placeCount === 1 ? "Place" : "Places"}
+            </h3>
+          </div>
+        </Link>
+      </Card>
+    </li>
   );
 }
 
