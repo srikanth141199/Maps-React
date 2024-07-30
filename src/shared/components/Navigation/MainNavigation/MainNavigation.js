@@ -1,6 +1,6 @@
 import React from "react";
 import "./MainNavigation.css";
-import MainHeader from "../MainHeader/Mainheader";
+import MainHeader from "../MainHeader/MainHeader.js";
 import { Link } from "react-router-dom";
 
 function MainNavigation() {
