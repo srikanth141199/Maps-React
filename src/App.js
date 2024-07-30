@@ -1,10 +1,22 @@
-
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import Users from "./user/components/Users";
+import NewPlace from "./places/components/NewPlace";
 
 function App() {
   return (
-    <div className="App">
-      <h1>This is maps App</h1>
-    </div>
+    <Router>
+      <Routes>
+        
+        <Route path="/" element={<Users/>}></Route>
+        <Route  path="/places/new" element={<NewPlace/>}></Route>
+        <Route path="*" element = {<Navigate to="/" />}></Route>
+      </Routes>
+    </Router>
   );
 }
 
