@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./UpdatePlace.css";
 import { useParams } from "react-router-dom";
 import Input from "../../../shared/components/ForElements/Input/Input";
@@ -8,6 +8,7 @@ import {
   VALIDATOR_REQUIRE,
 } from "../../../shared/util/validators";
 import useForm from "../../../shared/hooks/form-hook";
+import Card from "../../../shared/components/UIElements/Card/Card";
 
 const Dummy_Places = [
   {
@@ -80,33 +81,63 @@ const Dummy_Places = [
 ];
 
 function UpdatePlace() {
+  const [isLoading, setIsLoading] = useState(true);
   const placeId = useParams().placeId;
+
+  const [formState, inputHandler, setFormData] = useForm(
+    {
+      title: {
+        value: "",
+        isValid: false,
+      },
+      description: {
+        value: "",
+        isValid: false,
+      },
+    },
+    false
+  );
 
   const identifiedPlace = Dummy_Places.find((p) => p.id === placeId);
 
-  const [formState, inputHandler] = useForm(
-    {
-      title: {
-        value: identifiedPlace.title,
-        isValid: true,
-      },
-      description: {
-        value: identifiedPlace.description,
-        isValid: true,
-      },
-    },
-    true
-  );
+  useEffect(() => {
+    if (identifiedPlace) {
+      setFormData(
+        {
+          title: {
+            value: identifiedPlace.title,
+            isValid: true,
+          },
+          description: {
+            value: identifiedPlace.description,
+            isValid: true,
+          },
+        },
+        true
+      );
+    }
+    setIsLoading(false);
+  }, [setFormData, identifiedPlace]);
 
-  const placeUpdateSubmitHandler = (event)=>{
+  const placeUpdateSubmitHandler = (event) => {
     event.preventDefault();
-    console.log(formState.inputs)
-  }
+    console.log(formState.inputs);
+  };
 
   if (!identifiedPlace) {
     return (
       <div className="center">
-        <h2> Couldn't find the Place </h2>
+        <Card>
+          <h2> Couldn't find the Place </h2>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="center">
+        <h2>Loading...</h2>
       </div>
     );
   }
