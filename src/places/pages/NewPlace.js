@@ -43,6 +43,10 @@ function NewPlace() {
         value: "",
         isValid: false,
       },
+      address: {
+        value: "",
+        isValid: false,
+      }
     },
     isValid: false,
   });
@@ -86,7 +90,7 @@ function NewPlace() {
         id="address"
         element="input"
         label="Address"
-        validators={[VALIDATOR_REQUIRE]}
+        validators={[VALIDATOR_REQUIRE()]}
         errorText="Please enter a valid address"
         onInput={inputHandler}
       />
