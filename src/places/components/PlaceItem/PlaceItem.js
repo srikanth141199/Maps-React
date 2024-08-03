@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import "./PlaceItem.css";
 import Card from "../../../shared/components/UIElements/Card/Card";
 import Button from "../../../shared/components/ForElements/Button/Button";
 import Modal from "../../../shared/components/UIElements/Modal/Modal";
 import Map from "../../../shared/components/UIElements/Map/Map";
+import { AuthContext } from "../../../shared/context/auth-context";
 
 function PlaceItem(props) {
+  const auth = useContext(AuthContext);
   const [showMap, setShowMap] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -21,10 +23,10 @@ function PlaceItem(props) {
     setShowConfirmModal(false);
   };
 
-  const confirmDeleteHandler = ()=>{
+  const confirmDeleteHandler = () => {
     setShowConfirmModal(false);
-    console.log("Deleting...")
-  }
+    console.log("Deleting...");
+  };
 
   return (
     <>
@@ -43,13 +45,18 @@ function PlaceItem(props) {
 
       <Modal
         show={showConfirmModal}
-        onCancel = {cancelDeleteModal}
+        onCancel={cancelDeleteModal}
         header="Are you sure?"
         footerClass="place-item__modal-actions"
         footer={
           <>
-            <Button inverse onClick={cancelDeleteModal}> Cancel</Button>
-            <Button danger onClick={confirmDeleteHandler}>Delete</Button>
+            <Button inverse onClick={cancelDeleteModal}>
+              {" "}
+              Cancel
+            </Button>
+            <Button danger onClick={confirmDeleteHandler}>
+              Delete
+            </Button>
           </>
         }
       >
@@ -72,8 +79,14 @@ function PlaceItem(props) {
             <Button inverse onClick={openMapHandler}>
               View onMap
             </Button>
-            <Button to={`/places/${props.id}`}>Edit</Button>
-            <Button danger onClick={showDeleteWarningHandler}>Delete</Button>
+            {auth.isLoggedIn && (
+              <>
+                <Button to={`/places/${props.id}`}>Edit</Button>
+                <Button danger onClick={showDeleteWarningHandler}>
+                  Delete
+                </Button>
+              </>
+            )}
           </div>
         </Card>
       </li>
