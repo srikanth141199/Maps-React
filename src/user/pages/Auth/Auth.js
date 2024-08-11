@@ -11,10 +11,14 @@ import Button from "../../../shared/components/ForElements/Button/Button";
 
 import "./Auth.css";
 import { AuthContext } from "../../../shared/context/auth-context";
+import LoadingSpinner from "../../../shared/components/UIElements/LoadingSpinner/LoadingSpinner";
+import ErrorModal from "../../../shared/components/UIElements/Error/ErrorModal";
 
 function Auth() {
   const auth = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
 
   const [formState, inputHandler, setFormData] = useForm(
     {
@@ -30,10 +34,39 @@ function Auth() {
     false
   );
 
-  const authSubmitHandler = (event) => {
+  const authSubmitHandler = async (event) => {
     event.preventDefault();
-    console.log(formState.inputs);
-    auth.login();
+    //console.log(formState.inputs);
+
+    if (isLoginMode) {
+    } else {
+      try {
+        setIsLoading(true);
+        const response = await fetch("http://localhost:5000/api/users/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formState.inputs.name.value,
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+        });
+
+        const responseData = await response.json();
+        if(!response.ok){
+          throw new Error(responseData.message);
+        }
+        console.log(responseData);
+        setIsLoading(false);
+        auth.login();
+      } catch (error) {
+        setIsLoading(false);
+        console.log(error);
+        setError(error.message || "Something went wrong, please try again");
+      }
+    }
   };
 
   const switchModeHandler = () => {
@@ -60,8 +93,14 @@ function Auth() {
     setIsLoginMode(!isLoginMode);
   };
 
+  const errorHandler = ()=>{
+    setError(null);
+  }
   return (
+    <>
+    <ErrorModal error = {error} onClear = {errorHandler}/>
     <Card className="authentication">
+      {isLoading && <LoadingSpinner asOverlay />}
       <h2>Login Required!!</h2>
       <hr />
       <form onSubmit={authSubmitHandler}>
@@ -104,6 +143,7 @@ function Auth() {
         Switch to {isLoginMode ? "SignUp" : "Login"}
       </Button>
     </Card>
+    </>
   );
 }
 
