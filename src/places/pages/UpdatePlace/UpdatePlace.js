@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./UpdatePlace.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Input from "../../../shared/components/ForElements/Input/Input";
 import Button from "../../../shared/components/ForElements/Button/Button";
 import {
@@ -9,80 +9,17 @@ import {
 } from "../../../shared/util/validators";
 import useForm from "../../../shared/hooks/form-hook";
 import Card from "../../../shared/components/UIElements/Card/Card";
-
-const Dummy_Places = [
-  {
-    id: "p1",
-    title: "Empire State Building",
-    description: "One of the most famous buildings in the world",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/8/8e/Empire_State_Building_cropped.jpg",
-    address: "20 W 34th St., New York, NY 10001, United States",
-    location: {
-      lat: 40.7484445,
-      lng: -73.9905353,
-    },
-    creator: "u1",
-  },
-  {
-    id: "p2",
-    title: "Eiffel Tower",
-    description:
-      "A wrought-iron lattice tower on the Champ de Mars in Paris, France",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg",
-    address: "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
-    location: {
-      lat: 48.8583701,
-      lng: 2.2922926,
-    },
-    creator: "u2",
-  },
-  {
-    id: "p3",
-    title: "Colosseum",
-    description: "An ancient amphitheater in the center of Rome, Italy",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/d/d9/Colosseo_2020.jpg",
-    address: "Piazza del Colosseo, 1, 00184 Roma RM, Italy",
-    location: {
-      lat: 41.8902102,
-      lng: 12.4922309,
-    },
-    creator: "u3",
-  },
-  {
-    id: "p4",
-    title: "Great Wall of China",
-    description:
-      "A series of fortifications made of various materials, located in northern China",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/6/6f/The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
-    address: "Huairou, China",
-    location: {
-      lat: 40.4319077,
-      lng: 116.5703749,
-    },
-    creator: "u4",
-  },
-  {
-    id: "p5",
-    title: "Sydney Opera House",
-    description: "A multi-venue performing arts centre in Sydney, Australia",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/8/82/Sydney_Opera_House_viewed_from_the_north.jpg",
-    address: "Bennelong Point, Sydney NSW 2000, Australia",
-    location: {
-      lat: -33.8567844,
-      lng: 151.2152967,
-    },
-    creator: "u5",
-  },
-];
+import { useHttpClient } from "../../../shared/hooks/http-hook";
+import LoadingSpinner from "../../../shared/components/UIElements/LoadingSpinner/LoadingSpinner";
+import ErrorModal from "../../../shared/components/UIElements/Error/ErrorModal";
+import { AuthContext } from "../../../shared/context/auth-context";
 
 function UpdatePlace() {
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useContext(AuthContext);
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const [loadedPlace, setLoadedPlace] = useState();
   const placeId = useParams().placeId;
+  const navigate = useNavigate();
 
   const [formState, inputHandler, setFormData] = useForm(
     {
@@ -98,33 +35,65 @@ function UpdatePlace() {
     false
   );
 
-  const identifiedPlace = Dummy_Places.find((p) => p.id === placeId);
-
   useEffect(() => {
-    if (identifiedPlace) {
-      setFormData(
-        {
-          title: {
-            value: identifiedPlace.title,
-            isValid: true,
+    const fetchPlace = async () => {
+      try {
+        const responseData = await sendRequest(
+          `http://localhost:5000/api/places/${placeId}`
+        );
+        setLoadedPlace(responseData.place);
+        setFormData(
+          {
+            title: {
+              value: responseData.place.title,
+              isValid: true,
+            },
+            description: {
+              value: responseData.place.description,
+              isValid: true,
+            },
           },
-          description: {
-            value: identifiedPlace.description,
-            isValid: true,
-          },
-        },
-        true
-      );
-    }
-    setIsLoading(false);
-  }, [setFormData, identifiedPlace]);
+          true
+        );
+      } catch (err) {
+        // Error is already handled by useHttpClient, so no additional handling is needed here
+      }
+    };
 
-  const placeUpdateSubmitHandler = (event) => {
+    fetchPlace();
+  }, [sendRequest, placeId, setFormData]);
+
+  const placeUpdateSubmitHandler = async (event) => {
     event.preventDefault();
-    console.log(formState.inputs);
+    //console.log(formState.inputs);
+    try {
+      await sendRequest(
+        `http://localhost:5000/api/places/${placeId}`,
+        "PATCH",
+        JSON.stringify({
+          title: formState.inputs.title.value,
+          description: formState.inputs.description.value,
+        }),
+        {
+          "Content-Type": "application/json",
+        }
+      );
+
+      navigate("/"+auth.userId+'/places');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  if (!identifiedPlace) {
+  if (isLoading) {
+    return (
+      <div className="center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!loadedPlace && !error) {
     return (
       <div className="center">
         <Card>
@@ -134,44 +103,41 @@ function UpdatePlace() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="center">
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
-
   return (
-    <form className="update-form" onSubmit={placeUpdateSubmitHandler}>
-      <Input
-        id="title"
-        element="input"
-        type="text"
-        label="title"
-        validators={[VALIDATOR_REQUIRE()]}
-        errorText="Please enter a valid Title!!"
-        onInput={inputHandler}
-        initialValue={formState.inputs.title.value}
-        initialValid={formState.inputs.title.isValid}
-      ></Input>
+    <>
+      <ErrorModal error={error} onClear={clearError} />
+      {!isLoading && loadedPlace && (
+        <form className="update-form" onSubmit={placeUpdateSubmitHandler}>
+          <Input
+            id="title"
+            element="input"
+            type="text"
+            label="title"
+            validators={[VALIDATOR_REQUIRE()]}
+            errorText="Please enter a valid Title!!"
+            onInput={inputHandler}
+            initialValue={formState.inputs.title.value}
+            initialValid={formState.inputs.title.isValid}
+          ></Input>
 
-      <Input
-        id="description"
-        element="textarea"
-        type="text"
-        label="Description"
-        validators={[VALIDATOR_MINLENGTH(5)]}
-        errorText="Please enter a valid Description of atleast 5 characters!!"
-        onInput={inputHandler}
-        initialValue={formState.inputs.description.value}
-        initialValid={formState.inputs.description.isValid}
-      ></Input>
+          <Input
+            id="description"
+            element="textarea"
+            type="text"
+            label="Description"
+            validators={[VALIDATOR_MINLENGTH(5)]}
+            errorText="Please enter a valid Description of atleast 5 characters!!"
+            onInput={inputHandler}
+            initialValue={formState.inputs.description.value}
+            initialValid={formState.inputs.description.isValid}
+          ></Input>
 
-      <Button type="submit" disabled={!formState.isValid}>
-        Update Place
-      </Button>
-    </form>
+          <Button type="submit" disabled={!formState.isValid}>
+            Update Place
+          </Button>
+        </form>
+      )}
+    </>
   );
 }
 
