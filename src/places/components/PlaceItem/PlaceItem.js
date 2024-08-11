@@ -5,9 +5,13 @@ import Button from "../../../shared/components/ForElements/Button/Button";
 import Modal from "../../../shared/components/UIElements/Modal/Modal";
 import Map from "../../../shared/components/UIElements/Map/Map";
 import { AuthContext } from "../../../shared/context/auth-context";
+import { useHttpClient } from "../../../shared/hooks/http-hook";
+import ErrorModal from "../../../shared/components/UIElements/Error/ErrorModal";
+import LoadingSpinner from "../../../shared/components/UIElements/LoadingSpinner/LoadingSpinner";
 
 function PlaceItem(props) {
   const auth = useContext(AuthContext);
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
   const [showMap, setShowMap] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -23,13 +27,23 @@ function PlaceItem(props) {
     setShowConfirmModal(false);
   };
 
-  const confirmDeleteHandler = () => {
+  const confirmDeleteHandler = async () => {
     setShowConfirmModal(false);
-    console.log("Deleting...");
+    //console.log("Deleting...");
+    try {
+      await sendRequest(
+        `http://localhost:5000/api/places/${props.id}`,
+        "DELETE"
+      );
+      props.onDelete(props.id);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
     <>
+    {error && <ErrorModal error = {error} onClear = {clearError} />}
       <Modal
         show={showMap}
         onCancel={closeMapHandler}
@@ -67,6 +81,7 @@ function PlaceItem(props) {
       </Modal>
       <li className="place-item">
         <Card className="place-item__content">
+          {isLoading && <LoadingSpinner asOverlay />}
           <div className="place-item__image">
             <img src={props.image} alt={props.title} />
           </div>
@@ -79,7 +94,7 @@ function PlaceItem(props) {
             <Button inverse onClick={openMapHandler}>
               View onMap
             </Button>
-            {auth.isLoggedIn && (
+            {auth.userId === props.creatorId && (
               <>
                 <Button to={`/places/${props.id}`}>Edit</Button>
                 <Button danger onClick={showDeleteWarningHandler}>
