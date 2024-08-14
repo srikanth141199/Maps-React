@@ -14,6 +14,7 @@ import { AuthContext } from "../../../shared/context/auth-context";
 import LoadingSpinner from "../../../shared/components/UIElements/LoadingSpinner/LoadingSpinner";
 import ErrorModal from "../../../shared/components/UIElements/Error/ErrorModal";
 import { useHttpClient } from "../../../shared/hooks/http-hook";
+import ImageUpload from "../../../shared/components/ForElements/ImageUpload/ImageUpload";
 
 function Auth() {
   const auth = useContext(AuthContext);
@@ -40,6 +41,9 @@ function Auth() {
     event.preventDefault();
     //console.log(formState.inputs);
 
+    //console.log(formState.inputs);
+    
+
     if (isLoginMode) {
       try {
         const responseData = await sendRequest(
@@ -60,17 +64,15 @@ function Auth() {
       }
     } else {
       try {
+        const formData = new FormData();
+        formData.append('email', formState.inputs.email.value);
+        formData.append('name', formState.inputs.name.value);
+        formData.append('password', formState.inputs.password.value);
+        formData.append('image', formState.inputs.image.value)
         const responseData = await sendRequest(
           "http://localhost:5000/api/users/signup",
           "POST",
-          JSON.stringify({
-            name: formState.inputs.name.value,
-            email: formState.inputs.email.value,
-            password: formState.inputs.password.value,
-          }),
-          {
-            "Content-Type": "application/json",
-          }
+          formData
         );
 
         auth.login(responseData.user.id);
@@ -86,6 +88,7 @@ function Auth() {
         {
           ...formState.inputs,
           name: undefined,
+          image : undefined
         },
         formState.inputs.email.isValid && formState.inputs.password.isValid
       );
@@ -97,6 +100,10 @@ function Auth() {
             value: "",
             isValid: false,
           },
+          image : {
+            value : null,
+            isValid : false
+          }
         },
         false
       );
@@ -123,6 +130,7 @@ function Auth() {
               onInput={inputHandler}
             />
           )}
+          {!isLoginMode && <ImageUpload center id="image" onInput = {inputHandler}/>}
           <Input
             id="email"
             element="input"
@@ -138,7 +146,7 @@ function Auth() {
             type="password"
             label="Password"
             validators={[VALIDATOR_MINLENGTH(6)]}
-            errorText="Please enter a valid Password, atleat 6 characters!!"
+            errorText="Please enter a valid Password, atleast 6 characters!!"
             onInput={inputHandler}
           />
 
