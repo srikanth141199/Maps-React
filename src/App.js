@@ -11,22 +11,58 @@ import UserPlaces from "./places/pages/UserPlaces";
 import UpdatePlace from "./places/pages/UpdatePlace/UpdatePlace";
 import Auth from "./user/pages/Auth/Auth";
 import { AuthContext } from "./shared/context/auth-context";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function App() {
-  //const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(false);
   const [userId, setUserId] = useState(false);
-  const login = useCallback((uid, token) => {
-    //setIsLoggedIn(true);
+  const [tokenExpirationDate, setTokenExpirationDate] = useState();
+
+  let logoutTimer;
+
+  const login = useCallback((uid, token, expirationDate) => {
     setToken(token);
     setUserId(uid);
+    const tokenExpirationDate =
+      expirationDate || new Date(new Date().getTime() + 1000 * 60 * 60);
+    setTokenExpirationDate(tokenExpirationDate);
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({
+        userId: uid,
+        token: token,
+        expiration: tokenExpirationDate.toISOString(),
+      })
+    );
   }, []);
+
   const logout = useCallback(() => {
-    //setIsLoggedIn(false);
     setToken(null);
     setUserId(null);
+    setTokenExpirationDate(null);
+    localStorage.removeItem("userData");
   }, []);
+
+  useEffect(() => {
+    const storedData = JSON.parse(localStorage.getItem("userData"));
+    if (
+      storedData &&
+      storedData.token &&
+      new Date(storedData.expiration) > new Date()
+    ) {
+      login(storedData.userId, storedData.token, new Date(storedData.expiration));
+    }
+  }, [login]);
+
+  useEffect(() => {
+    if (token && tokenExpirationDate) {
+      const remainingTime = tokenExpirationDate.getTime() - new Date().getTime();
+      logoutTimer = setTimeout(logout, remainingTime);
+    } else {
+      clearTimeout(logoutTimer);
+    }
+  }, [token, logout, tokenExpirationDate]);
+
   let routes;
 
   if (token) {
@@ -49,6 +85,7 @@ function App() {
       </>
     );
   }
+
   return (
     <AuthContext.Provider
       value={{
